@@ -39,18 +39,15 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
       [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue new] withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
                                                    if (!error) {
                                                        CMAcceleration acceleration = accelerometerData.acceleration;
-                                                       int orientation = UIInterfaceOrientationMaskPortrait;
+                                                       int orientation;
 
-                                                       if(acceleration.x >= 0.75) {
+                                                       if (acceleration.x >= 0.75) {
                                                            orientation = UIInterfaceOrientationMaskLandscapeLeft;
-                                                       }
-                                                       if(acceleration.x <= -0.75) {
+                                                       } else if(acceleration.x <= -0.75) {
                                                            orientation = UIInterfaceOrientationMaskLandscapeRight;
-                                                       }
-                                                       if(acceleration.y <= -0.75) {
+                                                       } else if(acceleration.y <= -0.75) {
                                                            orientation = UIInterfaceOrientationMaskPortrait;
-                                                       }
-                                                       if(acceleration.y >= 0.75) {
+                                                       } else {
                                                            orientation = UIInterfaceOrientationMaskPortraitUpsideDown;
                                                        }
 
@@ -78,6 +75,8 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
                                                                                                                       body:@{@"orientation": @"LANDSCAPE-RIGHT"}];
 
                                                                           break;
+                                                                   default:
+                                                                   break;
                                                            }
 
                                                        }
