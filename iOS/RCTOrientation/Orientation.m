@@ -9,6 +9,14 @@
 #import "RCTEventDispatcher.h"
 #endif
 
+#import <CoreMotion/CoreMotion.h>
+
+@interface Orientation ()
+
+@property (nonatomic, strong) CMMotionManager *motionManager;
+
+@end
+
 @implementation Orientation
 @synthesize bridge = _bridge;
 
@@ -24,6 +32,58 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 {
   if ((self = [super init])) {
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:@"UIDeviceOrientationDidChangeNotification" object:nil];
+      self.motionManager = [[CMMotionManager alloc] init];
+      self.motionManager.accelerometerUpdateInterval = 0.2;
+      self.motionManager.gyroUpdateInterval = 0.2;
+      
+      [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue new] withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
+                                                   if (!error) {
+                                                       CMAcceleration acceleration = accelerometerData.acceleration;
+                                                       int orientation = UIInterfaceOrientationMaskPortrait;
+
+                                                       if(acceleration.x >= 0.75) {
+                                                           orientation = UIInterfaceOrientationMaskLandscapeLeft;
+                                                       }
+                                                       if(acceleration.x <= -0.75) {
+                                                           orientation = UIInterfaceOrientationMaskLandscapeRight;
+                                                       }
+                                                       if(acceleration.y <= -0.75) {
+                                                           orientation = UIInterfaceOrientationMaskPortrait;
+                                                       }
+                                                       if(acceleration.y >= 0.75) {
+                                                           orientation = UIInterfaceOrientationMaskPortraitUpsideDown;
+                                                       }
+
+                                                       if (orientation != _orientation) {
+                                                           _orientation = orientation;
+                                                           
+                                                           switch (_orientation){
+                                                               case UIInterfaceOrientationMaskPortrait:
+                                                                   [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                                                               body:@{@"orientation": @"PORTRAIT"}];
+
+                                                                   break;
+                                                               case UIInterfaceOrientationMaskLandscapeLeft:
+                                                                   [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                                                               body:@{@"orientation": @"LANDSCAPE-LEFT"}];
+
+                                                                   break;
+                                                                case UIInterfaceOrientationMaskPortraitUpsideDown:
+                                                                       [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                                                                   body:@{@"orientation": @"PORTRAITUPSIDEDOWN"}];
+
+                                                                       break;
+                                                                   case UIInterfaceOrientationMaskLandscapeRight:
+                                                                          [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                                                                      body:@{@"orientation": @"LANDSCAPE-RIGHT"}];
+
+                                                                          break;
+                                                           }
+
+                                                       }
+                                                   }
+                                               }];
+
   }
   return self;
 
@@ -31,6 +91,7 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 
 - (void)dealloc
 {
+    [self.motionManager stopAccelerometerUpdates];
   [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -198,6 +259,7 @@ RCT_EXPORT_METHOD(lockToLandscapeLeft)
     }];
 
 }
+
 
 RCT_EXPORT_METHOD(lockToLandscapeRight)
 {
