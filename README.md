@@ -3,6 +3,8 @@
 
 Listen to device orientation changes in React Native applications and programmatically set preferred orientation on a per screen basis. Works on both Android and iOS.
 
+Only this library works with fully iOS and Android sensor-based orientation detection!
+
 ## Installing
 
 ```
