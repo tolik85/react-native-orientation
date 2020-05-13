@@ -79,6 +79,15 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         return "Orientation";
     }
 
+        @ReactMethod
+        public void stopListener(Callback callback) {
+        if (sensorManager != null) {
+            sensorManager.unregisterListener(this);
+        }
+
+        callback.invoke(null, null);
+    }
+
     @ReactMethod
     public void getOrientation(Callback callback) {
         final int orientationInt = getReactApplicationContext().getResources().getConfiguration().orientation;
