@@ -56,22 +56,22 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
                 switch (_orientation){
                     case UIInterfaceOrientationMaskPortrait:
                         [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"PORTRAIT", @"error": error ? error.localizedDescription : nil}];
+                                                                        body:@{@"orientation": @"PORTRAIT", @"error": error ? error.localizedDescription : @""}];
                         
                         break;
                     case UIInterfaceOrientationMaskLandscapeLeft:
                         [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"LANDSCAPE-LEFT", @"error": error ? error.localizedDescription : nil}];
+                                                                        body:@{@"orientation": @"LANDSCAPE-LEFT", @"error": error ? error.localizedDescription : @""}];
                         
                         break;
                     case UIInterfaceOrientationMaskPortraitUpsideDown:
                         [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"PORTRAITUPSIDEDOWN", @"error": error ? error.localizedDescription : nil}];
+                                                                        body:@{@"orientation": @"PORTRAITUPSIDEDOWN", @"error": error ? error.localizedDescription : @""}];
                         
                         break;
                     case UIInterfaceOrientationMaskLandscapeRight:
                         [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"LANDSCAPE-RIGHT", @"error": error ? error.localizedDescription : nil}];
+                                                                        body:@{@"orientation": @"LANDSCAPE-RIGHT", @"error": error ? error.localizedDescription : @""}];
                         
                         break;
                     default:
