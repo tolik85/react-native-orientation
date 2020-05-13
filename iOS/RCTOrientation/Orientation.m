@@ -150,7 +150,7 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 
 RCT_EXPORT_MODULE();
 
-RCT_EXPORT_METHOD(startListener:(RCTResponseSenderBlock)callback)
+RCT_EXPORT_METHOD(startListener)
 {
     self.motionManager = [[CMMotionManager alloc] init];
     self.motionManager.accelerometerUpdateInterval = 0.2;
