@@ -30,7 +30,7 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
-public class OrientationModule extends ReactContextBaseJavaModule implements LifecycleEventListener, SensorEventListener{
+public class OrientationModule extends ReactContextBaseJavaModule implements LifecycleEventListener, SensorEventListener {
 
     private SensorManager sensorManager;
     private Sensor sensor;
@@ -48,6 +48,7 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
 
     final BroadcastReceiver receiver;
     private ReactApplicationContext context;
+
     public OrientationModule(ReactApplicationContext reactContext) {
         super(reactContext);
         final ReactApplicationContext ctx = reactContext;
@@ -64,8 +65,8 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
                 params.putString("orientation", orientationValue);
                 if (ctx.hasActiveCatalystInstance()) {
                     ctx
-                    .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-                    .emit("orientationDidChange", params);
+                            .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+                            .emit("orientationDidChange", params);
                 }
             }
         };
@@ -79,8 +80,15 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         return "Orientation";
     }
 
-        @ReactMethod
-        public void stopListener(Callback callback) {
+    @ReactMethod
+    public void startListener() {
+        if (sensorManager != null) {
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+    }
+
+    @ReactMethod
+    public void stopListener(Callback callback) {
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
         }
@@ -147,7 +155,8 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     }
 
     @Override
-    public @Nullable Map<String, Object> getConstants() {
+    public @Nullable
+    Map<String, Object> getConstants() {
         HashMap<String, Object> constants = new HashMap<String, Object>();
         int orientationInt = getReactApplicationContext().getResources().getConfiguration().orientation;
 
@@ -184,16 +193,15 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
         activity.registerReceiver(receiver, new IntentFilter("onConfigurationChanged"));
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
+
     @Override
     public void onHostPause() {
         final Activity activity = getCurrentActivity();
         if (activity == null) return;
-        try
-        {
+        try {
             activity.unregisterReceiver(receiver);
             sensorManager.unregisterListener(this);
-        }
-        catch (java.lang.IllegalArgumentException e) {
+        } catch (java.lang.IllegalArgumentException e) {
             FLog.e(ReactConstants.TAG, "receiver already unregistered", e);
         }
     }
@@ -206,68 +214,63 @@ public class OrientationModule extends ReactContextBaseJavaModule implements Lif
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-                float[] values = sensorEvent.values;
-                int orientation = ORIENTATION_UNKNOWN;
-                float X = -values[_DATA_X];
-                float Y = -values[_DATA_Y];
-                float Z = -values[_DATA_Z];
-                float magnitude = X*X + Y*Y;
+        float[] values = sensorEvent.values;
+        int orientation = ORIENTATION_UNKNOWN;
+        float X = -values[_DATA_X];
+        float Y = -values[_DATA_Y];
+        float Z = -values[_DATA_Z];
+        float magnitude = X * X + Y * Y;
 
-                if (magnitude * 4 >= Z*Z) {
-                    float OneEightyOverPi = 57.29577957855f;
-                    float angle = (float)Math.atan2(-Y, X) * OneEightyOverPi;
-                    orientation = 90 - (int)Math.round(angle);
-                    // normalize to 0 - 359 range
-                    while (orientation >= 360) {
-                        orientation -= 360;
-                    }
-                    while (orientation < 0) {
-                        orientation += 360;
-                    }
-                }
+        if (magnitude * 4 >= Z * Z) {
+            float OneEightyOverPi = 57.29577957855f;
+            float angle = (float) Math.atan2(-Y, X) * OneEightyOverPi;
+            orientation = 90 - (int) Math.round(angle);
+            // normalize to 0 - 359 range
+            while (orientation >= 360) {
+                orientation -= 360;
+            }
+            while (orientation < 0) {
+                orientation += 360;
+            }
+        }
 
-                if (orientation != mOrientationDeg)
-                {
-                    mOrientationDeg = orientation;
-                    if(orientation == -1){//basically flat
+        if (orientation != mOrientationDeg) {
+            mOrientationDeg = orientation;
+            if (orientation == -1) {//basically flat
 
-                    }
-                    else if(orientation < 10 || orientation > 350){
-                        tempOrientRounded = 1;//portrait
-                    }
-                    else if(orientation > 80 && orientation < 100){
-                        tempOrientRounded = 2; //lsRight
-                    }
-                    else if(orientation > 170 && orientation < 190){
-                        tempOrientRounded = 3; //upside down
-                    }
-                    else if(orientation > 260 && orientation < 280){
-                        tempOrientRounded = 4;//lsLeft
-                    }
+            } else if (orientation < 10 || orientation > 350) {
+                tempOrientRounded = 1;//portrait
+            } else if (orientation > 80 && orientation < 100) {
+                tempOrientRounded = 2; //lsRight
+            } else if (orientation > 170 && orientation < 190) {
+                tempOrientRounded = 3; //upside down
+            } else if (orientation > 260 && orientation < 280) {
+                tempOrientRounded = 4;//lsLeft
+            }
 
-                }
-                if(mOrientationRounded != tempOrientRounded){
-                    mOrientationRounded = tempOrientRounded;
-                    WritableMap map = Arguments.createMap();
-                    switch (mOrientationRounded){
-                        case PORTRAIT:
-                            map.putString("orientation", "PORTRAIT");
-                            sendEvent(context, "sensorOrientationChangeEvent", map);
-                            break;
-                        case LANDSCAPE_LEFT:
-                            map.putString("orientation", "LANDSCAPE-LEFT");
-                            sendEvent(context, "sensorOrientationChangeEvent", map);
-                            break;
-                        case UPSIDE_DOWN:
-                            map.putString("orientation", "PORTRAITUPSIDEDOWN");
-                            sendEvent(context, "sensorOrientationChangeEvent", map);
-                            break;
-                        case LANDSCAPE_RIGHT:
-                            map.putString("orientation", "LANDSCAPE-RIGHT");
-                            sendEvent(context, "sensorOrientationChangeEvent", map);
-                            break;
-                    }
-                }
+        }
+        if (mOrientationRounded != tempOrientRounded) {
+            mOrientationRounded = tempOrientRounded;
+            WritableMap map = Arguments.createMap();
+            switch (mOrientationRounded) {
+                case PORTRAIT:
+                    map.putString("orientation", "PORTRAIT");
+                    sendEvent(context, "sensorOrientationChangeEvent", map);
+                    break;
+                case LANDSCAPE_LEFT:
+                    map.putString("orientation", "LANDSCAPE-LEFT");
+                    sendEvent(context, "sensorOrientationChangeEvent", map);
+                    break;
+                case UPSIDE_DOWN:
+                    map.putString("orientation", "PORTRAITUPSIDEDOWN");
+                    sendEvent(context, "sensorOrientationChangeEvent", map);
+                    break;
+                case LANDSCAPE_RIGHT:
+                    map.putString("orientation", "LANDSCAPE-RIGHT");
+                    sendEvent(context, "sensorOrientationChangeEvent", map);
+                    break;
+            }
+        }
     }
 
     @Override

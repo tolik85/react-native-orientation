@@ -32,54 +32,6 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 {
     if ((self = [super init])) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(deviceOrientationDidChange:) name:@"UIDeviceOrientationDidChangeNotification" object:nil];
-        self.motionManager = [[CMMotionManager alloc] init];
-        self.motionManager.accelerometerUpdateInterval = 0.2;
-        self.motionManager.gyroUpdateInterval = 0.2;
-        
-        [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue new] withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
-            CMAcceleration acceleration = accelerometerData.acceleration;
-            int orientation;
-            
-            if (acceleration.x >= 0.75) {
-                orientation = UIInterfaceOrientationMaskLandscapeLeft;
-            } else if(acceleration.x <= -0.75) {
-                orientation = UIInterfaceOrientationMaskLandscapeRight;
-            } else if(acceleration.y <= -0.75) {
-                orientation = UIInterfaceOrientationMaskPortrait;
-            } else {
-                orientation = UIInterfaceOrientationMaskPortraitUpsideDown;
-            }
-            
-            if (orientation != _orientation) {
-                _orientation = orientation;
-                
-                switch (_orientation){
-                    case UIInterfaceOrientationMaskPortrait:
-                        [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"PORTRAIT", @"error": error ? error.localizedDescription : @""}];
-                        
-                        break;
-                    case UIInterfaceOrientationMaskLandscapeLeft:
-                        [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"LANDSCAPE-LEFT", @"error": error ? error.localizedDescription : @""}];
-                        
-                        break;
-                    case UIInterfaceOrientationMaskPortraitUpsideDown:
-                        [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"PORTRAITUPSIDEDOWN", @"error": error ? error.localizedDescription : @""}];
-                        
-                        break;
-                    case UIInterfaceOrientationMaskLandscapeRight:
-                        [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
-                                                                        body:@{@"orientation": @"LANDSCAPE-RIGHT", @"error": error ? error.localizedDescription : @""}];
-                        
-                        break;
-                    default:
-                        break;
-                }
-                
-            }
-        }];
     }
     
     return self;
@@ -88,7 +40,10 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 
 - (void)dealloc
 {
-    [self.motionManager stopAccelerometerUpdates];
+    if (self.motionManager) {
+        [self.motionManager stopAccelerometerUpdates];
+    }
+    
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
@@ -194,6 +149,58 @@ static UIInterfaceOrientationMask _orientation = UIInterfaceOrientationMaskAllBu
 }
 
 RCT_EXPORT_MODULE();
+
+RCT_EXPORT_METHOD(startListener:(RCTResponseSenderBlock)callback)
+{
+    self.motionManager = [[CMMotionManager alloc] init];
+    self.motionManager.accelerometerUpdateInterval = 0.2;
+    self.motionManager.gyroUpdateInterval = 0.2;
+
+    [self.motionManager startAccelerometerUpdatesToQueue:[NSOperationQueue new] withHandler:^(CMAccelerometerData  *accelerometerData, NSError *error) {
+        CMAcceleration acceleration = accelerometerData.acceleration;
+        int orientation;
+        
+        if (acceleration.x >= 0.75) {
+            orientation = UIInterfaceOrientationMaskLandscapeLeft;
+        } else if(acceleration.x <= -0.75) {
+            orientation = UIInterfaceOrientationMaskLandscapeRight;
+        } else if(acceleration.y <= -0.75) {
+            orientation = UIInterfaceOrientationMaskPortrait;
+        } else {
+            orientation = UIInterfaceOrientationMaskPortraitUpsideDown;
+        }
+        
+        if (orientation != _orientation) {
+            _orientation = orientation;
+            
+            switch (_orientation){
+                case UIInterfaceOrientationMaskPortrait:
+                    [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                    body:@{@"orientation": @"PORTRAIT", @"error": error ? error.localizedDescription : @""}];
+                    
+                    break;
+                case UIInterfaceOrientationMaskLandscapeLeft:
+                    [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                    body:@{@"orientation": @"LANDSCAPE-LEFT", @"error": error ? error.localizedDescription : @""}];
+                    
+                    break;
+                case UIInterfaceOrientationMaskPortraitUpsideDown:
+                    [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                    body:@{@"orientation": @"PORTRAITUPSIDEDOWN", @"error": error ? error.localizedDescription : @""}];
+                    
+                    break;
+                case UIInterfaceOrientationMaskLandscapeRight:
+                    [self.bridge.eventDispatcher sendDeviceEventWithName:@"sensorOrientationChangeEvent"
+                                                                    body:@{@"orientation": @"LANDSCAPE-RIGHT", @"error": error ? error.localizedDescription : @""}];
+                    
+                    break;
+                default:
+                    break;
+            }
+            
+        }
+    }];
+}
 
 RCT_EXPORT_METHOD(stopListener:(RCTResponseSenderBlock)callback)
 {
