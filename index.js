@@ -71,6 +71,14 @@ module.exports = {
       });
   },
 
+  stopListener(cb) {
+    Orientation.stopListener(() =>{
+        if (cb) {
+            cb();
+        }
+    });
+  },
+
   removeOrientationListener(cb) {
     var key = getKey(cb);
 
