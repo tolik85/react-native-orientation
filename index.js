@@ -69,6 +69,12 @@ module.exports = {
       (body) => {
         cb(body.orientation);
       });
+
+    Orientation.startListener();
+  },
+
+  startListener() {
+    Orientation.startListener();
   },
 
   stopListener(cb) {
